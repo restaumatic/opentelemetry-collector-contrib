@@ -34,6 +34,9 @@ all-pkgs:
 all-srcs:
 	@echo $(ALL_SRC) | tr ' ' '\n' | sort
 
+all-modules:
+	@echo $(ALL_MODULES) | tr ' ' '\n' | sort
+
 .DEFAULT_GOAL := common
 
 .PHONY: common

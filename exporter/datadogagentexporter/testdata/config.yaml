@@ -1,0 +1,18 @@
+receivers:
+  examplereceiver:
+  
+processors:
+  exampleprocessor:
+  
+exporters:
+  datadogagent:
+  datadogagent/customname:
+    agent_url: "http://datadogagent:8126"
+    service_name: "myService"
+
+service:
+  pipelines:
+    traces:
+      receivers: [examplereceiver]
+      processors: [exampleprocessor]
+      exporters: [datadogagent]

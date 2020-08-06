@@ -25,17 +25,7 @@ import (
 )
 
 // NewTraceExporter return a new LogSerice trace exporter.
-func NewTraceExporter(config configmodels.Exporter, logger *zap.Logger, cn connAttr) (component.TraceExporter, error) {
-	typeLog := zap.String("type", string(config.Type()))
-	nameLog := zap.String("name", config.Name())
-	awsConfig, session, err := GetAWSConfigSession(logger, cn, config.(*Config))
-	if err != nil {
-		return nil, err
-	}
-	xrayClient := NewXRay(logger, awsConfig, session)
-	return exporterhelper.NewTraceExporter(
-		config,
-		func(ctx context.Context, td pdata.Traces) (totalDroppedSpans int, err error) {
+func NewTraceExporter(logger *zap.Logger, cfg configmodels.Exporter) (component.TraceExporterOld, error) {
 
 	l := &logServiceTraceSender{
 		logger: logger,

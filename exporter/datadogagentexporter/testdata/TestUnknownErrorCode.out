@@ -1,0 +1,19 @@
+[
+  [
+    {
+      "span_id": 72623859790382856,
+      "trace_id": 651345242494996240,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "meta": {
+        "error.msg": "Crazy error",
+        "error.type": "ERR_CODE_1337"
+      },
+      "error": 1
+    }
+  ]
+]

@@ -84,6 +84,13 @@ func TestClientSpanWithError(t *testing.T) {
 	testTraceExporter(t, constructTraces(span))
 }
 
+func TestUnknownErrorCode(t *testing.T) {
+	span := constructExampleSpan()
+	span.Status().SetCode(pdata.StatusCode(1337))
+	span.Status().SetMessage("Crazy error")
+	testTraceExporter(t, constructTraces(span))
+}
+
 func constructExampleSpan() *pdata.Span {
 	span := pdata.NewSpan()
 	span.InitEmpty()

@@ -15,27 +15,26 @@
 package datadogagentexporter
 
 import (
+	"context"
+
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config/configerror"
 	"go.opentelemetry.io/collector/config/configmodels"
-	"go.uber.org/zap"
+	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
 const (
 	typeStr = "datadogagent"
 )
 
-// Factory is the factory for the DataDog exporter.
-type Factory struct {
-}
-
-// Type gets the type of the exporter configuration created by this factory.
-func (f *Factory) Type() configmodels.Type {
-	return configmodels.Type(typeStr)
+func NewFactory() component.ExporterFactory {
+	return exporterhelper.NewFactory(
+		typeStr,
+		createDefaultConfig,
+		exporterhelper.WithTraces(createTraceExporter))
 }
 
 // CreateDefaultConfig creates a default configuration for this exporter.
-func (f *Factory) CreateDefaultConfig() configmodels.Exporter {
+func createDefaultConfig() configmodels.Exporter {
 	return &Config{
 		ExporterSettings: configmodels.ExporterSettings{
 			TypeVal: configmodels.Type(typeStr),
@@ -47,12 +46,7 @@ func (f *Factory) CreateDefaultConfig() configmodels.Exporter {
 }
 
 // CreateTraceExporter creates a DataDog trace exporter for this configuration.
-func (f *Factory) CreateTraceExporter(logger *zap.Logger, cfg configmodels.Exporter) (component.TraceExporter, error) {
+func createTraceExporter(_ context.Context, params component.ExporterCreateParams, cfg configmodels.Exporter) (component.TraceExporter, error) {
 	config := cfg.(*Config)
-	return NewTraceExporter(config, logger)
-}
-
-// CreateMetricsExporter returns nil.
-func (f *Factory) CreateMetricsExporter(logger *zap.Logger, cfg configmodels.Exporter) (component.MetricsExporter, error) {
-	return nil, configerror.ErrDataTypeIsNotSupported
+	return NewTraceExporter(config, params.Logger)
 }

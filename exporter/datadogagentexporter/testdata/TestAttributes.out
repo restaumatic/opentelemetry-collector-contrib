@@ -1,0 +1,22 @@
+[
+  [
+    {
+      "span_id": 72623859790382856,
+      "trace_id": 651345242494996240,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "meta": {
+        "testattr.bool": "true"
+      },
+      "metrics": {
+        "testattr.double": 1.234,
+        "testattr.int": 1234
+      },
+      "error": 0
+    }
+  ]
+]

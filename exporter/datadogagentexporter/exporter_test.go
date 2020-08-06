@@ -30,6 +30,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/consumer/pdata"
+	otlptrace "github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1"
 	"go.uber.org/zap"
 )
 
@@ -43,9 +44,44 @@ func TestOverrideSpanName(t *testing.T) {
 	testTraceExporter(t, constructTraces(span))
 }
 
+func TestOverrideResource(t *testing.T) {
+    span := constructExampleSpan()
+    span.Attributes().InsertString("resource.name", "resource_name_from_attribute")
+	testTraceExporter(t, constructTraces(span))
+}
+
+func TestOverrideSpanType(t *testing.T) {
+    span := constructExampleSpan()
+    span.Attributes().InsertString("span.type", "web")
+	testTraceExporter(t, constructTraces(span))
+}
+
+func TestAttributes(t *testing.T) {
+    span := constructExampleSpan()
+    span.Attributes().InsertBool("testattr.bool", true)
+    span.Attributes().InsertDouble("testattr.double", 1.234)
+    span.Attributes().InsertInt("testattr.int", 1234)
+    // TODO: handle MAP and ARRAY values
+	testTraceExporter(t, constructTraces(span))
+}
+
 func TestParentSpanID(t *testing.T) {
     span := constructExampleSpan()
 	span.SetParentSpanID([]byte{101, 102, 103, 104, 105, 106, 107, 108})
+	testTraceExporter(t, constructTraces(span))
+}
+
+func TestClientSpan(t *testing.T) {
+    span := constructExampleSpan()
+	span.SetKind(pdata.SpanKindCLIENT)
+	testTraceExporter(t, constructTraces(span))
+}
+
+func TestClientSpanWithError(t *testing.T) {
+    span := constructExampleSpan()
+	span.SetKind(pdata.SpanKindCLIENT)
+    span.Status().SetCode(pdata.StatusCode(otlptrace.Status_InvalidArgument))
+    span.Status().SetMessage("")
 	testTraceExporter(t, constructTraces(span))
 }
 

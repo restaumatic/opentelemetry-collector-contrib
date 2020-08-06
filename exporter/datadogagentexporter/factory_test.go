@@ -24,46 +24,21 @@ import (
 	"go.opentelemetry.io/collector/config/configcheck"
 	"go.opentelemetry.io/collector/config/configmodels"
 	"go.opentelemetry.io/collector/config/configtest"
-	"go.uber.org/zap"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {
-	factory := Factory{}
-	cfg := factory.CreateDefaultConfig()
+	cfg := createDefaultConfig()
 	assert.NotNil(t, cfg, "failed to create default config")
 	assert.NoError(t, configcheck.ValidateConfig(cfg))
 }
 
 func TestCreateTraceExporter(t *testing.T) {
-	logger := zap.NewNop()
-
 	factories, err := componenttest.ExampleComponents()
 	require.NoError(t, err)
-	factory := Factory{}
-	factories.Exporters[configmodels.Type(typeStr)] = &factory
-	cfg, err := configtest.LoadConfigFile(
+	factory := NewFactory()
+	factories.Exporters[configmodels.Type(typeStr)] = factory
+	_, err = configtest.LoadConfigFile(
 		t, path.Join(".", "testdata", "config.yaml"), factories,
 	)
 	require.NoError(t, err)
-
-	exporter, err := factory.CreateTraceExporter(logger, cfg.Exporters["datadogagent/customname"])
-	assert.Nil(t, err)
-	assert.NotNil(t, exporter)
-}
-
-func TestCreateMetricsExporter(t *testing.T) {
-	logger := zap.NewNop()
-
-	factories, err := componenttest.ExampleComponents()
-	require.NoError(t, err)
-	factory := Factory{}
-	factories.Exporters[configmodels.Type(typeStr)] = &factory
-	cfg, err := configtest.LoadConfigFile(
-		t, path.Join(".", "testdata", "config.yaml"), factories,
-	)
-	require.NoError(t, err)
-
-	exporter, err := factory.CreateMetricsExporter(logger, cfg.Exporters["datadogagent/customname"])
-	assert.NotNil(t, err)
-	assert.Nil(t, exporter)
 }

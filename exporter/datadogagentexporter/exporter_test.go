@@ -115,6 +115,13 @@ func TestGroupByTraceID(t *testing.T) {
 	}))
 }
 
+func TestNoStatus(t *testing.T) {
+	span := constructExampleSpan()
+    // This is a convoluted way of setting the status to nil
+	pdata.NewSpanStatus().CopyTo(span.Status())
+	testTraceExporter(t, constructTraces(span))
+}
+
 func constructExampleSpan() *pdata.Span {
 	span := pdata.NewSpan()
 	span.InitEmpty()
@@ -168,8 +175,7 @@ func testTraceExporter(t *testing.T, traces pdata.Traces) {
 	}
 
 	logger := zap.NewNop()
-	factory := Factory{}
-	exporter, err := factory.CreateTraceExporter(logger, &cfg)
+	exporter, err := NewTraceExporter(&cfg, logger)
 	require.NoError(t, err)
 
 	ctx := context.Background()

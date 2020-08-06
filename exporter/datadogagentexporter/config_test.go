@@ -29,8 +29,7 @@ func TestLoadConfig(t *testing.T) {
 	factories, err := componenttest.ExampleComponents()
 	assert.Nil(t, err)
 
-	factory := &Factory{}
-	factories.Exporters[configmodels.Type(typeStr)] = factory
+	factories.Exporters[configmodels.Type(typeStr)] = NewFactory()
 	cfg, err := configtest.LoadConfigFile(
 		t, path.Join(".", "testdata", "config.yaml"), factories,
 	)
@@ -41,7 +40,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, len(cfg.Exporters), 2)
 
 	r0 := cfg.Exporters["datadogagent"]
-	assert.Equal(t, r0, factory.CreateDefaultConfig())
+	assert.Equal(t, r0, createDefaultConfig())
 
 	r1 := cfg.Exporters["datadogagent/customname"].(*Config)
 	assert.Equal(t, r1, &Config{

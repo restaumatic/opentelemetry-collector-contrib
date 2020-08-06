@@ -48,10 +48,15 @@ func convertSpan(serviceName string, s pdata.Span, resource pdata.Resource) (*dd
 		span.ParentID = binary.BigEndian.Uint64(s.ParentSpanID())
 	}
 
-	code, ok := statusCodes[otlptrace.Status_StatusCode(s.Status().Code())]
+    var otelStatusCode pdata.StatusCode = 0
+    if !s.Status().IsNil() {
+        otelStatusCode = s.Status().Code()
+    }
+
+	code, ok := statusCodes[otlptrace.Status_StatusCode(otelStatusCode)]
 	if !ok {
 		code = codeDetails{
-			message: "ERR_CODE_" + strconv.FormatInt(int64(s.Status().Code()), 10),
+			message: "ERR_CODE_" + strconv.FormatInt(int64(otelStatusCode), 10),
 			status:  http.StatusInternalServerError,
 		}
 	}
@@ -73,9 +78,11 @@ func convertSpan(serviceName string, s pdata.Span, resource pdata.Resource) (*dd
 
 	if span.Error == 1 {
 		span.Meta[ext.ErrorType] = code.message
-		if msg := s.Status().Message(); msg != "" {
-			span.Meta[ext.ErrorMsg] = msg
-		}
+        if !s.Status().IsNil() {
+            if msg := s.Status().Message(); msg != "" {
+                span.Meta[ext.ErrorMsg] = msg
+            }
+        }
 	}
 
 	s.Attributes().ForEach(func(key string, val pdata.AttributeValue) {

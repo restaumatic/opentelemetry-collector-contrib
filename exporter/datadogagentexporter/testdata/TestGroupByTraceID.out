@@ -1,0 +1,50 @@
+[
+  [
+    {
+      "span_id": 1,
+      "trace_id": 1,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "error": 0
+    },
+    {
+      "span_id": 3,
+      "trace_id": 1,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "error": 0
+    }
+  ],
+  [
+    {
+      "span_id": 2,
+      "trace_id": 2,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "error": 0
+    },
+    {
+      "span_id": 4,
+      "trace_id": 2,
+      "name": "span_name",
+      "service": "test_service",
+      "resource": "span_name",
+      "type": "custom",
+      "start": 1588334156464409000,
+      "duration": 6045639,
+      "error": 0
+    }
+  ]
+]

@@ -36,7 +36,10 @@ func NewTraceExporter(config *Config, logger *zap.Logger) (component.TraceExport
 		config,
 		func(ctx context.Context, td pdata.Traces) (totalDroppedSpans int, err error) {
 			totalDroppedSpans = 0
-			ddspans := make([]*ddSpan, 0, td.SpanCount())
+
+			traceIDToIndex := make(map[uint64]int)
+			var traces [][]*ddSpan
+
 			for i := 0; i < td.ResourceSpans().Len(); i++ {
 				rspans := td.ResourceSpans().At(i)
 				if rspans.IsNil() {
@@ -62,11 +65,18 @@ func NewTraceExporter(config *Config, logger *zap.Logger) (component.TraceExport
 							totalDroppedSpans++
 							continue
 						}
-						ddspans = append(ddspans, ddspan)
+
+						traceIndex, ok := traceIDToIndex[ddspan.TraceID]
+						if !ok {
+							traceIndex = len(traces)
+							traceIDToIndex[ddspan.TraceID] = traceIndex
+							traces = append(traces, []*ddSpan{})
+						}
+						traces[traceIndex] = append(traces[traceIndex], ddspan)
 					}
 				}
 			}
-			sendTraces(config, client, ddspans)
+			sendTraces(config, client, traces)
 			return totalDroppedSpans, err
 		},
 		exporterhelper.WithShutdown(func(context.Context) error {
@@ -75,23 +85,28 @@ func NewTraceExporter(config *Config, logger *zap.Logger) (component.TraceExport
 	)
 }
 
-func sendTraces(config *Config, client *http.Client, spans []*ddSpan) (droppedSpans int, err error) {
+func sendTraces(config *Config, client *http.Client, traces [][]*ddSpan) (droppedSpans int, err error) {
+	numSpans := 0
+	for _, trace := range traces {
+		numSpans += len(trace)
+	}
+
 	body := new(bytes.Buffer)
-	err = json.NewEncoder(body).Encode([][]*ddSpan{spans})
+	err = json.NewEncoder(body).Encode(traces)
 	if err != nil {
-		return len(spans), consumererror.Permanent(err)
+		return numSpans, consumererror.Permanent(err)
 	}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/v0.4/traces", config.AgentURL), body)
 	if err != nil {
-		return len(spans), consumererror.Permanent(err)
+		return numSpans, consumererror.Permanent(err)
 	}
 
 	req.Header.Set("Content-type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return len(spans), err
+		return numSpans, err
 	}
 
 	io.Copy(ioutil.Discard, resp.Body)

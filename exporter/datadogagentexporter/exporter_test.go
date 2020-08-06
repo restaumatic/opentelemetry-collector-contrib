@@ -91,6 +91,30 @@ func TestUnknownErrorCode(t *testing.T) {
 	testTraceExporter(t, constructTraces(span))
 }
 
+func TestGroupByTraceID(t *testing.T) {
+	traceID1 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+	traceID2 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}
+	traceID1Copy := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+	span1_1 := constructExampleSpan()
+	span1_1.SetTraceID(traceID1)
+	span1_1.SetSpanID([]byte{0, 0, 0, 0, 0, 0, 0, 1})
+	span2_1 := constructExampleSpan()
+	span2_1.SetTraceID(traceID2)
+	span2_1.SetSpanID([]byte{0, 0, 0, 0, 0, 0, 0, 2})
+	span1_2 := constructExampleSpan()
+	span1_2.SetTraceID(traceID1Copy)
+	span1_2.SetSpanID([]byte{0, 0, 0, 0, 0, 0, 0, 3})
+	span2_2 := constructExampleSpan()
+	span2_2.SetTraceID(traceID2)
+	span2_2.SetSpanID([]byte{0, 0, 0, 0, 0, 0, 0, 4})
+	testTraceExporter(t, constructTracesFromSpans([]*pdata.Span{
+		span1_1,
+		span2_1,
+		span1_2,
+		span2_2,
+	}))
+}
+
 func constructExampleSpan() *pdata.Span {
 	span := pdata.NewSpan()
 	span.InitEmpty()
@@ -187,6 +211,10 @@ func assertSnapshot(t *testing.T, actual []byte, testName string) {
 }
 
 func constructTraces(span *pdata.Span) pdata.Traces {
+	return constructTracesFromSpans([]*pdata.Span{span})
+}
+
+func constructTracesFromSpans(spans []*pdata.Span) pdata.Traces {
 	resource := constructResource()
 
 	traces := pdata.NewTraces()
@@ -195,8 +223,10 @@ func constructTraces(span *pdata.Span) pdata.Traces {
 	resource.CopyTo(rspans.Resource())
 	rspans.InstrumentationLibrarySpans().Resize(1)
 	ispans := rspans.InstrumentationLibrarySpans().At(0)
-	ispans.Spans().Resize(1)
-	span.CopyTo(ispans.Spans().At(0))
+	ispans.Spans().Resize(len(spans))
+	for index, span := range spans {
+		span.CopyTo(ispans.Spans().At(index))
+	}
 	return traces
 }
 

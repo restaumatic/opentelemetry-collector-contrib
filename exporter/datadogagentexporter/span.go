@@ -41,12 +41,12 @@ func convertSpan(serviceName string, s pdata.Span, resource pdata.Resource) (*dd
 		Duration: int64(s.EndTime() - s.StartTime()),
 		Metrics:  map[string]float64{},
 		Meta:     map[string]string{},
-        Type:     "custom",
+		Type:     "custom",
 	}
 
-    if len(s.ParentSpanID()) > 0 {
+	if len(s.ParentSpanID()) > 0 {
 		span.ParentID = binary.BigEndian.Uint64(s.ParentSpanID())
-    }
+	}
 
 	code, ok := statusCodes[otlptrace.Status_StatusCode(s.Status().Code())]
 	if !ok {

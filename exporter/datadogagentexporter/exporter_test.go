@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -28,9 +27,9 @@ import (
 	"sync"
 	"testing"
 
+	otlptrace "github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/consumer/pdata"
-	otlptrace "github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1"
 	"go.uber.org/zap"
 )
 
@@ -39,49 +38,49 @@ func TestBasicSpan(t *testing.T) {
 }
 
 func TestOverrideSpanName(t *testing.T) {
-    span := constructExampleSpan()
-    span.Attributes().InsertString("span.name", "span_name_from_attribute")
+	span := constructExampleSpan()
+	span.Attributes().InsertString("span.name", "span_name_from_attribute")
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestOverrideResource(t *testing.T) {
-    span := constructExampleSpan()
-    span.Attributes().InsertString("resource.name", "resource_name_from_attribute")
+	span := constructExampleSpan()
+	span.Attributes().InsertString("resource.name", "resource_name_from_attribute")
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestOverrideSpanType(t *testing.T) {
-    span := constructExampleSpan()
-    span.Attributes().InsertString("span.type", "web")
+	span := constructExampleSpan()
+	span.Attributes().InsertString("span.type", "web")
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestAttributes(t *testing.T) {
-    span := constructExampleSpan()
-    span.Attributes().InsertBool("testattr.bool", true)
-    span.Attributes().InsertDouble("testattr.double", 1.234)
-    span.Attributes().InsertInt("testattr.int", 1234)
-    // TODO: handle MAP and ARRAY values
+	span := constructExampleSpan()
+	span.Attributes().InsertBool("testattr.bool", true)
+	span.Attributes().InsertDouble("testattr.double", 1.234)
+	span.Attributes().InsertInt("testattr.int", 1234)
+	// TODO: handle MAP and ARRAY values
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestParentSpanID(t *testing.T) {
-    span := constructExampleSpan()
+	span := constructExampleSpan()
 	span.SetParentSpanID([]byte{101, 102, 103, 104, 105, 106, 107, 108})
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestClientSpan(t *testing.T) {
-    span := constructExampleSpan()
+	span := constructExampleSpan()
 	span.SetKind(pdata.SpanKindCLIENT)
 	testTraceExporter(t, constructTraces(span))
 }
 
 func TestClientSpanWithError(t *testing.T) {
-    span := constructExampleSpan()
+	span := constructExampleSpan()
 	span.SetKind(pdata.SpanKindCLIENT)
-    span.Status().SetCode(pdata.StatusCode(otlptrace.Status_InvalidArgument))
-    span.Status().SetMessage("")
+	span.Status().SetCode(pdata.StatusCode(otlptrace.Status_InvalidArgument))
+	span.Status().SetMessage("")
 	testTraceExporter(t, constructTraces(span))
 }
 
@@ -200,18 +199,4 @@ func constructResource() pdata.Resource {
 	attrs := pdata.NewAttributeMap()
 	attrs.CopyTo(resource.Attributes())
 	return resource
-}
-
-func constructSpanAttributes(attributes map[string]interface{}) pdata.AttributeMap {
-	attrs := pdata.NewAttributeMap()
-	for key, value := range attributes {
-		if cast, ok := value.(int); ok {
-			attrs.InsertInt(key, int64(cast))
-		} else if cast, ok := value.(int64); ok {
-			attrs.InsertInt(key, cast)
-		} else {
-			attrs.InsertString(key, fmt.Sprintf("%v", value))
-		}
-	}
-	return attrs
 }
